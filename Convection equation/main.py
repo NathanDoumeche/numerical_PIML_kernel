@@ -6,6 +6,7 @@ import PIKL_periodic as pikl
 import torch
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+torch.manual_seed(1001)
 
 def centering(shift_t, shift_x, scale_t, scale_x, data_t, data_x, data_zt, data_zx):
   data_t = scale_t*data_t-shift_t
@@ -14,8 +15,7 @@ def centering(shift_t, shift_x, scale_t, scale_x, data_t, data_x, data_zt, data_
   data_zx = scale_x*(data_zx-shift_x)
   return data_t, data_x, data_zt, data_zx
 
-beta = 40 
-beta = beta # rescaling because in the paper, -pi <x < pi, whereas here, -1< x < 1
+beta = 20 
 
 shift_t, shift_x, scale_t, scale_x = 0.5, 0.5, 1/2.01, 2
 s=1
@@ -34,22 +34,27 @@ lambda_n, mu_n =  0, 10**5
 n_t = 100
 n_x = 100
 
-t,x = torch.linspace(-0.5,0.5, n_t), torch.linspace(-1,1, n_x)
-t,x = torch.meshgrid(t,x)
-t,x = t.flatten(), x.flatten()
-t0, x0, t_test, x_test = t[0:n_x], x[0:n_x], t[n_x:], x[n_x:]
+err_n = []
+for i in range(10):
+  t,x = torch.rand(n_t)-0.5, 2*torch.rand(n_x)-1
+  t,x = torch.meshgrid(t,x)
+  t,x = t.flatten(), x.flatten()
+  t0, x0, t_test, x_test = t[0:n_x], x[0:n_x], t[n_x:], x[n_x:]
 
-f_star = torch.sin(torch.pi*x-beta*t)
-initial_condition = torch.tensor(f_star[0:n_x],  dtype=default_type)
-ground_truth = torch.tensor(f_star[n_x:].flatten(), dtype=default_type)
+  f_star = torch.sin(torch.pi*x-beta*t)
+  initial_condition = torch.tensor(f_star[0:n_x],  dtype=default_type)
+  ground_truth = torch.tensor(f_star[n_x:].flatten(), dtype=default_type)
 
-n =torch.tensor(n_x).to(device)
+  n =torch.tensor(n_x).to(device)
 
-regression_vect = pikl.RFF_fit(t0, x0, initial_condition, s, m, lambda_n, mu_n, L, domain, PDE, device)
-estimator = pikl.RFF_estimate(regression_vect, t_test, x_test, s, m, n, lambda_n, mu_n, L, domain, PDE, device)
+  regression_vect = pikl.RFF_fit(t0, x0, initial_condition, s, m, lambda_n, mu_n, L, domain, PDE, device)
+  estimator = pikl.RFF_estimate(regression_vect, t_test, x_test, s, m, n, lambda_n, mu_n, L, domain, PDE, device)
 
-error_u = np.sqrt(torch.mean(torch.square(torch.abs(estimator - ground_truth))).item())/np.sqrt(torch.mean(torch.square(ground_truth)).item())
-print('Relative L2 error_u: %e' % (error_u))
+  error_u = np.sqrt(torch.mean(torch.square(torch.abs(estimator - ground_truth))).item())/np.sqrt(torch.mean(torch.square(ground_truth)).item())
+  err_n.append(error_u)
+
+print('Relative L2 error_u: %e' % (np.mean(err_n)))
+print('Standard deviation: %e' % (np.std(err_n)))
 
 plt.imshow(f_star.view(-1,n_x))
 plt.colorbar()
