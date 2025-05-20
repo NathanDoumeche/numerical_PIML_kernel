@@ -2,6 +2,8 @@
 
 This project aims at illustrating the results of the paper _Physics-informed kernel learning_ (Nathan Doumèche, Francis Bach, Gérard Biau, and Claire Boyer). The paper is available at https://hal.science/hal-04701052. 
 
+The code from this repository has been translated into the *pikernel* Python kernel, available at [https://pypi.org/project/pikernel/](https://pypi.org/project/pikernel/). The following tutorial introduce 1-PINNs, 2- kernel methods and 3- Physics-informed kernels: [https://claireboyer.github.io/tutorial-piml/](https://claireboyer.github.io/tutorial-piml/).
+
 ## Finite-element method implementation of the physics-informed kernel
 The file _1-FEM_kernel_approximation.ipynb_ is a Jupyter notebook with the code necessary to compute the physics-informed kernel 
 (see also _Physics-informed machine learning as a kernel method_, Nathan Doumèche, Francis Bach, Gérard Biau, and Claire Boyer, COLT 2024) by solving the kernel equation (3). 
